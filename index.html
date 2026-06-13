@@ -36,7 +36,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1.25rem 6%;
+      padding: 1.25rem 2rem 1.25rem 1.5rem;
       background: rgba(13,13,13,0.85);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
@@ -47,9 +47,17 @@
       font-weight: 900;
       letter-spacing: -0.5px;
       color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      text-decoration: none;
+      white-space: nowrap;
     }
 
-    .logo span { color: var(--green); }
+    .wordmark { color: #f0f0f0 !important; font-size: 1.4rem; font-weight: 900; letter-spacing: -0.5px; }
+    .wordmark em { color: #00e676 !important; font-style: normal; font-weight: 900; }
+
+    .logo img { width: 36px; height: 30px; display: block; }
 
     nav ul {
       list-style: none;
@@ -684,12 +692,13 @@
       nav ul { display: none; }
     }
   </style>
+  <script>history.scrollRestoration = 'manual'; window.scrollTo(0, 0);</script>
 </head>
 <body>
 
   <!-- NAV -->
   <nav>
-    <div class="logo">Build<span>haus</span></div>
+    <div class="logo"><img src="logo.svg" alt="Buildhaus" /><span class="wordmark">Build<em>haus</em></span></div>
     <ul>
       <li><a href="#services">Services</a></li>
       <li><a href="#portfolio">Work</a></li>
@@ -1014,7 +1023,7 @@
 
   <!-- FOOTER -->
   <footer>
-    <div class="logo">Build<span>haus</span></div>
+    <div class="logo"><img src="logo.svg" alt="Buildhaus" />Buildhaus</div>
     <p>© 2026 Buildhaus. Scotland, UK. All rights reserved.</p>
     <div style="display:flex;gap:1.5rem;">
       <a href="privacy.html" style="color:var(--muted);font-size:0.8rem;text-decoration:none;">Privacy Policy</a>

@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Buildhaus — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --green: #00e676;
+      --green-dim: #00c853;
+      --bg: #0d0d0d;
+      --bg2: #141414;
+      --bg3: #1a1a1a;
+      --bg4: #202020;
+      --text: #f0f0f0;
+      --muted: #888;
+      --border: #222;
+    }
+
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* SIDEBAR */
+    .layout { display: flex; min-height: 100vh; }
+
+    aside {
+      width: 220px;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 2rem 1.25rem;
+      position: fixed;
+      top: 0; bottom: 0; left: 0;
+    }
+
+    .logo { font-size: 1.3rem; font-weight: 900; margin-bottom: 2.5rem; }
+    .logo span { color: var(--green); }
+
+    nav a {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.65rem 0.75rem;
+      border-radius: 8px;
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+      transition: background 0.15s, color 0.15s;
+      cursor: pointer;
+    }
+
+    nav a:hover, nav a.active { background: var(--bg3); color: var(--text); }
+    nav a.active { color: var(--green); }
+
+    .nav-icon { font-size: 1rem; width: 20px; text-align: center; }
+
+    aside .version { margin-top: auto; font-size: 0.72rem; color: #444; }
+
+    /* MAIN */
+    main { margin-left: 220px; padding: 2.5rem 2.5rem; width: 100%; }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* PAGE HEADER */
+    .page-header { margin-bottom: 2rem; }
+    .page-header h1 { font-size: 1.6rem; font-weight: 900; letter-spacing: -0.5px; }
+    .page-header p { color: var(--muted); font-size: 0.875rem; margin-top: 0.3rem; }
+
+    /* STAT CARDS */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+    }
+
+    .stat-card .label { font-size: 0.75rem; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem; }
+    .stat-card .value { font-size: 1.8rem; font-weight: 900; letter-spacing: -1px; }
+    .stat-card .value.green { color: var(--green); }
+
+    /* SECTION BOX */
+    .box {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+
+    .box-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .box-header h2 { font-size: 0.95rem; font-weight: 700; }
+
+    /* BUTTONS */
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 7px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.15s;
+    }
+
+    .btn-green { background: var(--green); color: #000; }
+    .btn-green:hover { background: var(--green-dim); }
+    .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover { border-color: #444; }
+    .btn-danger { background: transparent; color: #ff5252; border: 1px solid #ff525230; font-size: 0.75rem; padding: 0.35rem 0.7rem; }
+    .btn-danger:hover { background: #ff525215; }
+    .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.75rem; }
+
+    /* TABLE */
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      text-align: left;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg3);
+    }
+
+    td {
+      padding: 1rem 1.5rem;
+      font-size: 0.875rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--bg3); }
+
+    /* STATUS BADGES */
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.65rem;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    .badge-new { background: rgba(0,150,255,0.12); color: #4fc3f7; }
+    .badge-progress { background: rgba(255,180,0,0.12); color: #ffb300; }
+    .badge-review { background: rgba(180,0,255,0.12); color: #ce93d8; }
+    .badge-complete { background: rgba(0,230,118,0.12); color: var(--green); }
+    .badge-paid { background: rgba(0,230,118,0.2); color: var(--green); border: 1px solid rgba(0,230,118,0.3); }
+    .badge-enquiry { background: rgba(0,150,255,0.12); color: #4fc3f7; }
+    .badge-quoted { background: rgba(255,180,0,0.12); color: #ffb300; }
+    .badge-won { background: rgba(0,230,118,0.12); color: var(--green); }
+    .badge-lost { background: rgba(255,82,82,0.12); color: #ff5252; }
+
+    /* MODAL */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 1.5rem; }
+
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--muted); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.7rem 0.9rem;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.875rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus { border-color: var(--green); }
+
+    .form-group select option { background: var(--bg3); }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    .modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem; }
+
+    /* EMPTY STATE */
+    .empty {
+      padding: 3rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+
+    .empty .icon { font-size: 2rem; margin-bottom: 0.75rem; opacity: 0.4; }
+
+    /* OVERVIEW RECENT */
+    .recent-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.9rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.875rem;
+    }
+
+    .recent-item:last-child { border-bottom: none; }
+
+    .recent-item .name { font-weight: 600; }
+    .recent-item .meta { font-size: 0.78rem; color: var(--muted); margin-top: 0.15rem; }
+
+    /* ACTION ROW */
+    .action-row { display: flex; gap: 0.5rem; }
+
+    /* FILTER ROW */
+    .filter-row {
+      display: flex;
+      gap: 0.5rem;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg3);
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 0.35rem 0.85rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.15s;
+    }
+
+    .filter-btn:hover, .filter-btn.active { border-color: var(--green); color: var(--green); background: rgba(0,230,118,0.07); }
+
+    .client-name { font-weight: 600; }
+    .client-email { font-size: 0.78rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside>
+    <div class="logo">Build<span>haus</span></div>
+    <nav>
+      <a class="active" onclick="showPage('overview')"><span class="nav-icon">📊</span> Overview</a>
+      <a onclick="showPage('jobs')"><span class="nav-icon">🔨</span> Jobs</a>
+      <a onclick="showPage('enquiries')"><span class="nav-icon">✉</span> Enquiries</a>
+      <a onclick="showPage('clients')"><span class="nav-icon">👤</span> Clients</a>
+    </nav>
+    <div class="version">Buildhaus Dashboard v1.0</div>
+  </aside>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- OVERVIEW -->
+    <div class="page active" id="page-overview">
+      <div class="page-header">
+        <h1>Overview</h1>
+        <p id="overview-date"></p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="label">Active Jobs</div>
+          <div class="value" id="stat-active">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Completed</div>
+          <div class="value" id="stat-complete">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Enquiries</div>
+          <div class="value" id="stat-enquiries">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Revenue</div>
+          <div class="value green" id="stat-revenue">£0</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+        <div class="box">
+          <div class="box-header"><h2>Recent Jobs</h2></div>
+          <div id="overview-jobs"></div>
+        </div>
+        <div class="box">
+          <div class="box-header"><h2>Recent Enquiries</h2></div>
+          <div id="overview-enquiries"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JOBS -->
+    <div class="page" id="page-jobs">
+      <div class="page-header">
+        <h1>Jobs</h1>
+        <p>Track every project from start to payment.</p>
+      </div>
+      <div class="box">
+        <div class="box-header">
+          <h2>All Jobs</h2>
+          <button class="btn btn-green" onclick="openModal('job')">+ New Job</button>
+        </div>
+        <div class="filter-row" id="job-filters">
+          <button class="filter-btn active" onclick="filterJobs('all', this)">All</button>
+          <button class="filter-btn" onclick="filterJobs('New', this)">New</button>
+          <button class="filter-btn" onclick="filterJobs('In Progress', this)">In Progress</button>
+          <button class="filter-btn" onclick="filterJobs('In Review', this)">In Review</button>
+          <button class="filter-btn" onclick="filterJobs('Complete', this)">Complete</button>
+          <button class="filter-btn" onclick="filterJobs('Paid', this)">Paid</button>
+        </div>
+        <div id="jobs-table"></div>
+      </div>
+    </div>
+
+    <!-- ENQUIRIES -->
+    <div class="page" id="page-enquiries">
+      <div class="page-header">
+        <h1>Enquiries</h1>
+        <p>Log emails and contact form submissions here.</p>
+      </div>
+      <div class="box">
+        <div class="box-header">
+          <h2>All Enquiries</h2>
+          <button class="btn btn-green" onclick="openModal('enquiry')">+ Log Enquiry</button>
+        </div>
+        <div class="filter-row">
+          <button class="filter-btn active" onclick="filterEnquiries('all', this)">All</button>
+          <button class="filter-btn" onclick="filterEnquiries('New Enquiry', this)">New</button>
+          <button class="filter-btn" onclick="filterEnquiries('Quoted', this)">Quoted</button>
+          <button class="filter-btn" onclick="filterEnquiries('Won', this)">Won</button>
+          <button class="filter-btn" onclick="filterEnquiries('Lost', this)">Lost</button>
+        </div>
+        <div id="enquiries-table"></div>
+      </div>
+    </div>
+
+    <!-- CLIENTS -->
+    <div class="page" id="page-clients">
+      <div class="page-header">
+        <h1>Clients</h1>
+        <p>Everyone you've worked with or quoted.</p>
+      </div>
+      <div class="box">
+        <div class="box-header">
+          <h2>All Clients</h2>
+          <button class="btn btn-green" onclick="openModal('client')">+ Add Client</button>
+        </div>
+        <div id="clients-table"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- JOB MODAL -->
+<div class="modal-overlay" id="modal-job">
+  <div class="modal">
+    <h3 id="job-modal-title">New Job</h3>
+    <input type="hidden" id="job-id" />
+    <div class="form-row">
+      <div class="form-group">
+        <label>Client Name</label>
+        <input type="text" id="job-client" placeholder="e.g. Acme Ltd" />
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="job-email" placeholder="client@email.com" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Project Name</label>
+      <input type="text" id="job-name" placeholder="e.g. New business website" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Package</label>
+        <select id="job-package">
+          <option value="">Select...</option>
+          <option>Starter — £799</option>
+          <option>Business — £1,999</option>
+          <option>Growth — £3,999</option>
+          <option>Custom</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Value (£)</label>
+        <input type="number" id="job-value" placeholder="0" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Status</label>
+        <select id="job-status">
+          <option>New</option>
+          <option>In Progress</option>
+          <option>In Review</option>
+          <option>Complete</option>
+          <option>Paid</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Deadline</label>
+        <input type="date" id="job-deadline" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Notes</label>
+      <textarea id="job-notes" placeholder="Any details about the project..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('job')">Cancel</button>
+      <button class="btn btn-green" onclick="saveJob()">Save Job</button>
+    </div>
+  </div>
+</div>
+
+<!-- ENQUIRY MODAL -->
+<div class="modal-overlay" id="modal-enquiry">
+  <div class="modal">
+    <h3 id="enquiry-modal-title">Log Enquiry</h3>
+    <input type="hidden" id="enquiry-id" />
+    <div class="form-row">
+      <div class="form-group">
+        <label>Name</label>
+        <input type="text" id="enquiry-name" placeholder="Contact name" />
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="enquiry-email" placeholder="their@email.com" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Company</label>
+        <input type="text" id="enquiry-company" placeholder="Company name (optional)" />
+      </div>
+      <div class="form-group">
+        <label>Service Interested In</label>
+        <select id="enquiry-service">
+          <option value="">Select...</option>
+          <option>New Website</option>
+          <option>Redesign</option>
+          <option>E-Commerce Store</option>
+          <option>Maintenance / Support</option>
+          <option>Something Else</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Status</label>
+        <select id="enquiry-status">
+          <option>New Enquiry</option>
+          <option>Quoted</option>
+          <option>Won</option>
+          <option>Lost</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Date Received</label>
+        <input type="date" id="enquiry-date" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Message / Notes</label>
+      <textarea id="enquiry-notes" placeholder="What did they say? Paste their message or add notes..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('enquiry')">Cancel</button>
+      <button class="btn btn-green" onclick="saveEnquiry()">Save Enquiry</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLIENT MODAL -->
+<div class="modal-overlay" id="modal-client">
+  <div class="modal">
+    <h3>Add Client</h3>
+    <input type="hidden" id="client-id" />
+    <div class="form-row">
+      <div class="form-group">
+        <label>Name</label>
+        <input type="text" id="client-name" placeholder="Full name" />
+      </div>
+      <div class="form-group">
+        <label>Company</label>
+        <input type="text" id="client-company" placeholder="Company name" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="client-email" placeholder="email@company.com" />
+      </div>
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="text" id="client-phone" placeholder="Optional" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Notes</label>
+      <textarea id="client-notes" placeholder="Anything worth remembering..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('client')">Cancel</button>
+      <button class="btn btn-green" onclick="saveClient()">Save Client</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---- DATA ----
+  let jobs = JSON.parse(localStorage.getItem('bh_jobs') || '[]');
+  let enquiries = JSON.parse(localStorage.getItem('bh_enquiries') || '[]');
+  let clients = JSON.parse(localStorage.getItem('bh_clients') || '[]');
+  let jobFilter = 'all';
+  let enquiryFilter = 'all';
+
+  function save() {
+    localStorage.setItem('bh_jobs', JSON.stringify(jobs));
+    localStorage.setItem('bh_enquiries', JSON.stringify(enquiries));
+    localStorage.setItem('bh_clients', JSON.stringify(clients));
+  }
+
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+  // ---- NAV ----
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    event.currentTarget.classList.add('active');
+    if (name === 'overview') renderOverview();
+    if (name === 'jobs') renderJobs();
+    if (name === 'enquiries') renderEnquiries();
+    if (name === 'clients') renderClients();
+  }
+
+  // ---- MODALS ----
+  function openModal(type, id) {
+    if (type === 'job') {
+      document.getElementById('job-modal-title').textContent = id ? 'Edit Job' : 'New Job';
+      document.getElementById('job-id').value = id || '';
+      if (id) {
+        const j = jobs.find(x => x.id === id);
+        document.getElementById('job-client').value = j.client;
+        document.getElementById('job-email').value = j.email || '';
+        document.getElementById('job-name').value = j.name;
+        document.getElementById('job-package').value = j.package || '';
+        document.getElementById('job-value').value = j.value || '';
+        document.getElementById('job-status').value = j.status;
+        document.getElementById('job-deadline').value = j.deadline || '';
+        document.getElementById('job-notes').value = j.notes || '';
+      } else {
+        document.getElementById('job-client').value = '';
+        document.getElementById('job-email').value = '';
+        document.getElementById('job-name').value = '';
+        document.getElementById('job-package').value = '';
+        document.getElementById('job-value').value = '';
+        document.getElementById('job-status').value = 'New';
+        document.getElementById('job-deadline').value = '';
+        document.getElementById('job-notes').value = '';
+      }
+    }
+    if (type === 'enquiry') {
+      document.getElementById('enquiry-modal-title').textContent = id ? 'Edit Enquiry' : 'Log Enquiry';
+      document.getElementById('enquiry-id').value = id || '';
+      if (id) {
+        const e = enquiries.find(x => x.id === id);
+        document.getElementById('enquiry-name').value = e.name;
+        document.getElementById('enquiry-email').value = e.email || '';
+        document.getElementById('enquiry-company').value = e.company || '';
+        document.getElementById('enquiry-service').value = e.service || '';
+        document.getElementById('enquiry-status').value = e.status;
+        document.getElementById('enquiry-date').value = e.date || '';
+        document.getElementById('enquiry-notes').value = e.notes || '';
+      } else {
+        document.getElementById('enquiry-name').value = '';
+        document.getElementById('enquiry-email').value = '';
+        document.getElementById('enquiry-company').value = '';
+        document.getElementById('enquiry-service').value = '';
+        document.getElementById('enquiry-status').value = 'New Enquiry';
+        document.getElementById('enquiry-date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('enquiry-notes').value = '';
+      }
+    }
+    if (type === 'client') {
+      document.getElementById('client-id').value = id || '';
+      if (id) {
+        const c = clients.find(x => x.id === id);
+        document.getElementById('client-name').value = c.name;
+        document.getElementById('client-company').value = c.company || '';
+        document.getElementById('client-email').value = c.email || '';
+        document.getElementById('client-phone').value = c.phone || '';
+        document.getElementById('client-notes').value = c.notes || '';
+      } else {
+        document.getElementById('client-name').value = '';
+        document.getElementById('client-company').value = '';
+        document.getElementById('client-email').value = '';
+        document.getElementById('client-phone').value = '';
+        document.getElementById('client-notes').value = '';
+      }
+    }
+    document.getElementById('modal-' + type).classList.add('open');
+  }
+
+  function closeModal(type) {
+    document.getElementById('modal-' + type).classList.remove('open');
+  }
+
+  document.querySelectorAll('.modal-overlay').forEach(o => {
+    o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+  });
+
+  // ---- SAVE ----
+  function saveJob() {
+    const id = document.getElementById('job-id').value;
+    const job = {
+      id: id || uid(),
+      client: document.getElementById('job-client').value,
+      email: document.getElementById('job-email').value,
+      name: document.getElementById('job-name').value,
+      package: document.getElementById('job-package').value,
+      value: parseFloat(document.getElementById('job-value').value) || 0,
+      status: document.getElementById('job-status').value,
+      deadline: document.getElementById('job-deadline').value,
+      notes: document.getElementById('job-notes').value,
+      created: id ? jobs.find(x => x.id === id).created : new Date().toISOString()
+    };
+    if (id) { jobs = jobs.map(x => x.id === id ? job : x); }
+    else { jobs.unshift(job); }
+    save(); closeModal('job'); renderJobs(); renderOverview();
+  }
+
+  function saveEnquiry() {
+    const id = document.getElementById('enquiry-id').value;
+    const enq = {
+      id: id || uid(),
+      name: document.getElementById('enquiry-name').value,
+      email: document.getElementById('enquiry-email').value,
+      company: document.getElementById('enquiry-company').value,
+      service: document.getElementById('enquiry-service').value,
+      status: document.getElementById('enquiry-status').value,
+      date: document.getElementById('enquiry-date').value,
+      notes: document.getElementById('enquiry-notes').value,
+      created: id ? enquiries.find(x => x.id === id).created : new Date().toISOString()
+    };
+    if (id) { enquiries = enquiries.map(x => x.id === id ? enq : x); }
+    else { enquiries.unshift(enq); }
+    save(); closeModal('enquiry'); renderEnquiries(); renderOverview();
+  }
+
+  function saveClient() {
+    const id = document.getElementById('client-id').value;
+    const client = {
+      id: id || uid(),
+      name: document.getElementById('client-name').value,
+      company: document.getElementById('client-company').value,
+      email: document.getElementById('client-email').value,
+      phone: document.getElementById('client-phone').value,
+      notes: document.getElementById('client-notes').value,
+      created: id ? clients.find(x => x.id === id).created : new Date().toISOString()
+    };
+    if (id) { clients = clients.map(x => x.id === id ? client : x); }
+    else { clients.unshift(client); }
+    save(); closeModal('client'); renderClients();
+  }
+
+  // ---- DELETE ----
+  function deleteJob(id) { if (confirm('Delete this job?')) { jobs = jobs.filter(x => x.id !== id); save(); renderJobs(); renderOverview(); } }
+  function deleteEnquiry(id) { if (confirm('Delete this enquiry?')) { enquiries = enquiries.filter(x => x.id !== id); save(); renderEnquiries(); renderOverview(); } }
+  function deleteClient(id) { if (confirm('Delete this client?')) { clients = clients.filter(x => x.id !== id); save(); renderClients(); } }
+
+  // ---- FILTERS ----
+  function filterJobs(f, btn) {
+    jobFilter = f;
+    document.querySelectorAll('#job-filters .filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderJobs();
+  }
+
+  function filterEnquiries(f, btn) {
+    enquiryFilter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderEnquiries();
+  }
+
+  // ---- BADGES ----
+  function jobBadge(s) {
+    const map = { 'New': 'badge-new', 'In Progress': 'badge-progress', 'In Review': 'badge-review', 'Complete': 'badge-complete', 'Paid': 'badge-paid' };
+    return `<span class="badge ${map[s] || ''}">${s}</span>`;
+  }
+
+  function enqBadge(s) {
+    const map = { 'New Enquiry': 'badge-enquiry', 'Quoted': 'badge-quoted', 'Won': 'badge-won', 'Lost': 'badge-lost' };
+    return `<span class="badge ${map[s] || ''}">${s}</span>`;
+  }
+
+  // ---- RENDER ----
+  function renderOverview() {
+    document.getElementById('overview-date').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const active = jobs.filter(j => !['Complete','Paid'].includes(j.status)).length;
+    const complete = jobs.filter(j => ['Complete','Paid'].includes(j.status)).length;
+    const revenue = jobs.filter(j => j.status === 'Paid').reduce((s, j) => s + (j.value || 0), 0);
+    document.getElementById('stat-active').textContent = active;
+    document.getElementById('stat-complete').textContent = complete;
+    document.getElementById('stat-enquiries').textContent = enquiries.length;
+    document.getElementById('stat-revenue').textContent = '£' + revenue.toLocaleString();
+
+    const oj = document.getElementById('overview-jobs');
+    oj.innerHTML = jobs.slice(0, 5).map(j => `
+      <div class="recent-item">
+        <div><div class="name">${j.client}</div><div class="meta">${j.name}</div></div>
+        ${jobBadge(j.status)}
+      </div>`).join('') || '<div class="empty"><div class="icon">🔨</div>No jobs yet</div>';
+
+    const oe = document.getElementById('overview-enquiries');
+    oe.innerHTML = enquiries.slice(0, 5).map(e => `
+      <div class="recent-item">
+        <div><div class="name">${e.name}</div><div class="meta">${e.service || 'No service specified'}</div></div>
+        ${enqBadge(e.status)}
+      </div>`).join('') || '<div class="empty"><div class="icon">✉</div>No enquiries yet</div>';
+  }
+
+  function renderJobs() {
+    const filtered = jobFilter === 'all' ? jobs : jobs.filter(j => j.status === jobFilter);
+    const el = document.getElementById('jobs-table');
+    if (!filtered.length) { el.innerHTML = '<div class="empty"><div class="icon">🔨</div>No jobs found</div>'; return; }
+    el.innerHTML = `<table>
+      <thead><tr>
+        <th>Client</th><th>Project</th><th>Package</th><th>Value</th><th>Deadline</th><th>Status</th><th></th>
+      </tr></thead>
+      <tbody>${filtered.map(j => `<tr>
+        <td><div class="client-name">${j.client}</div><div class="client-email">${j.email || ''}</div></td>
+        <td>${j.name}</td>
+        <td style="color:var(--muted);font-size:0.8rem">${j.package || '—'}</td>
+        <td style="font-weight:600;color:var(--green)">${j.value ? '£' + j.value.toLocaleString() : '—'}</td>
+        <td style="color:var(--muted);font-size:0.8rem">${j.deadline ? new Date(j.deadline).toLocaleDateString('en-GB') : '—'}</td>
+        <td>${jobBadge(j.status)}</td>
+        <td><div class="action-row">
+          <button class="btn btn-outline btn-sm" onclick="openModal('job','${j.id}')">Edit</button>
+          <button class="btn btn-danger" onclick="deleteJob('${j.id}')">Delete</button>
+        </div></td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+  }
+
+  function renderEnquiries() {
+    const filtered = enquiryFilter === 'all' ? enquiries : enquiries.filter(e => e.status === enquiryFilter);
+    const el = document.getElementById('enquiries-table');
+    if (!filtered.length) { el.innerHTML = '<div class="empty"><div class="icon">✉</div>No enquiries found</div>'; return; }
+    el.innerHTML = `<table>
+      <thead><tr>
+        <th>Name</th><th>Company</th><th>Service</th><th>Date</th><th>Status</th><th></th>
+      </tr></thead>
+      <tbody>${filtered.map(e => `<tr>
+        <td><div class="client-name">${e.name}</div><div class="client-email">${e.email || ''}</div></td>
+        <td style="color:var(--muted)">${e.company || '—'}</td>
+        <td style="font-size:0.8rem">${e.service || '—'}</td>
+        <td style="color:var(--muted);font-size:0.8rem">${e.date ? new Date(e.date).toLocaleDateString('en-GB') : '—'}</td>
+        <td>${enqBadge(e.status)}</td>
+        <td><div class="action-row">
+          <button class="btn btn-outline btn-sm" onclick="openModal('enquiry','${e.id}')">Edit</button>
+          <button class="btn btn-danger" onclick="deleteEnquiry('${e.id}')">Delete</button>
+        </div></td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+  }
+
+  function renderClients() {
+    const el = document.getElementById('clients-table');
+    if (!clients.length) { el.innerHTML = '<div class="empty"><div class="icon">👤</div>No clients yet</div>'; return; }
+    el.innerHTML = `<table>
+      <thead><tr><th>Name</th><th>Company</th><th>Email</th><th>Phone</th><th>Jobs</th><th></th></tr></thead>
+      <tbody>${clients.map(c => `<tr>
+        <td class="client-name">${c.name}</td>
+        <td style="color:var(--muted)">${c.company || '—'}</td>
+        <td style="font-size:0.8rem">${c.email || '—'}</td>
+        <td style="color:var(--muted);font-size:0.8rem">${c.phone || '—'}</td>
+        <td style="font-size:0.8rem;color:var(--muted)">${jobs.filter(j => j.client === c.name).length}</td>
+        <td><div class="action-row">
+          <button class="btn btn-outline btn-sm" onclick="openModal('client','${c.id}')">Edit</button>
+          <button class="btn btn-danger" onclick="deleteClient('${c.id}')">Delete</button>
+        </div></td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+  }
+
+  // ---- INIT ----
+  renderOverview();
+</script>
+</body>
+</html>

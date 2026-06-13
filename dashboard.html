@@ -36,8 +36,10 @@
       top: 0; bottom: 0; left: 0;
     }
 
-    .logo { font-size: 1.3rem; font-weight: 900; margin-bottom: 2.5rem; }
-    .logo span { color: var(--green); }
+    .logo { font-size: 1.3rem; font-weight: 900; margin-bottom: 2.5rem; display: flex; align-items: center; gap: 0.6rem; }
+    .logo img { width: 34px; height: 28px; display: block; }
+    .wordmark { color: #f0f0f0 !important; font-size: 1.3rem; font-weight: 900; letter-spacing: -0.5px; }
+    .wordmark em { color: #00e676 !important; font-style: normal; font-weight: 900; }
 
     nav a {
       display: flex;
@@ -291,7 +293,7 @@
 
   <!-- SIDEBAR -->
   <aside>
-    <div class="logo">Build<span>haus</span></div>
+    <div class="logo"><img src="logo.svg" alt="Buildhaus" /><span class="wordmark">Build<em>haus</em></span></div>
     <nav>
       <a class="active" onclick="showPage('overview')"><span class="nav-icon">📊</span> Overview</a>
       <a onclick="showPage('jobs')"><span class="nav-icon">🔨</span> Jobs</a>

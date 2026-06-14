@@ -847,6 +847,71 @@
       color: var(--muted);
     }
 
+    /* HAMBURGER */
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 0.4rem;
+      background: none;
+      border: none;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 24px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+      transition: all 0.25s ease;
+    }
+
+    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    .mobile-menu {
+      display: none;
+      position: fixed;
+      top: 64px;
+      left: 0; right: 0;
+      background: rgba(13,13,13,0.97);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 1.5rem 2rem;
+      z-index: 99;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .mobile-menu.open { display: flex; }
+
+    .mobile-menu a {
+      display: block;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 1rem;
+      font-weight: 500;
+      padding: 0.9rem 0;
+      border-bottom: 1px solid var(--border);
+      transition: color 0.2s;
+    }
+
+    .mobile-menu a:last-child { border-bottom: none; }
+    .mobile-menu a:hover { color: var(--text); }
+
+    .mobile-menu .mobile-cta {
+      margin-top: 1rem;
+      background: var(--green);
+      color: #000 !important;
+      text-align: center;
+      padding: 0.85rem !important;
+      border-radius: 8px;
+      font-weight: 700 !important;
+      border-bottom: none !important;
+    }
+
     /* RESPONSIVE */
     @media (max-width: 768px) {
       #about, .contact-wrap {
@@ -857,6 +922,8 @@
       .hero-stats { gap: 2rem; flex-wrap: wrap; }
 
       nav ul { display: none; }
+
+      .hamburger { display: flex; }
     }
   </style>
   <script>history.scrollRestoration = 'manual'; window.scrollTo(0, 0);</script>
@@ -874,7 +941,35 @@
       <li><a href="#about">About</a></li>
       <li><a href="#contact" class="nav-cta">Get a Quote</a></li>
     </ul>
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
   </nav>
+
+  <!-- MOBILE MENU -->
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="#services" class="mobile-link">Services</a>
+    <a href="#industries" class="mobile-link">Industries</a>
+    <a href="#portfolio" class="mobile-link">Work</a>
+    <a href="#pricing" class="mobile-link">Pricing</a>
+    <a href="#about" class="mobile-link">About</a>
+    <a href="#contact" class="mobile-cta mobile-link">Get a Quote</a>
+  </div>
+
+  <script>
+    const btn = document.getElementById('hamburger');
+    const menu = document.getElementById('mobile-menu');
+    btn.addEventListener('click', () => {
+      btn.classList.toggle('open');
+      menu.classList.toggle('open');
+    });
+    document.querySelectorAll('.mobile-link').forEach(link => {
+      link.addEventListener('click', () => {
+        btn.classList.remove('open');
+        menu.classList.remove('open');
+      });
+    });
+  </script>
 
   <!-- HERO -->
   <section id="hero">

@@ -3,7 +3,10 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 import os
 
-SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
+SCOPES = [
+    'https://www.googleapis.com/auth/gmail.readonly',
+    'https://www.googleapis.com/auth/gmail.send',
+]
 BASE = os.path.dirname(os.path.abspath(__file__))
 CREDS_FILE = os.path.join(BASE, 'credentials.json')
 TOKEN_FILE = os.path.join(BASE, 'gmail_token.json')

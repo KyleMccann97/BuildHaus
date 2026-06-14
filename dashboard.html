@@ -285,6 +285,124 @@
 
     .client-name { font-weight: 600; }
     .client-email { font-size: 0.78rem; color: var(--muted); }
+
+    /* EMAIL LAYOUT */
+    .email-layout { display: grid; grid-template-columns: 340px 1fr; gap: 1.5rem; align-items: start; }
+
+    .email-list-item {
+      display: flex;
+      flex-direction: column;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .email-list-item:last-child { border-bottom: none; }
+    .email-list-item:hover { background: var(--bg3); }
+    .email-list-item.selected { background: var(--bg3); border-left: 2px solid var(--green); }
+
+    .email-from { font-size: 0.875rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .email-subject { font-size: 0.8rem; color: var(--muted); margin-top: 0.15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .email-meta { font-size: 0.72rem; color: #555; margin-top: 0.2rem; }
+    .email-unread .email-from { color: var(--green); }
+    .email-unread .email-subject { color: var(--text); }
+
+    .email-detail {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      position: sticky;
+      top: 1.5rem;
+    }
+
+    .email-detail-header { margin-bottom: 1.25rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border); }
+    .email-detail-subject { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .email-detail-from { font-size: 0.8rem; color: var(--muted); }
+
+    .email-body {
+      font-size: 0.85rem;
+      color: var(--text);
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 260px;
+      overflow-y: auto;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .reply-area {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .reply-area textarea {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.85rem;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      resize: vertical;
+      min-height: 140px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .reply-area textarea:focus { border-color: var(--green); }
+
+    .reply-actions { display: flex; gap: 0.75rem; }
+
+    /* QUARANTINE */
+    .quarantine-item {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .quarantine-item:last-child { border-bottom: none; }
+    .quarantine-from { font-weight: 600; font-size: 0.875rem; }
+    .quarantine-subject { font-size: 0.8rem; color: var(--muted); margin-top: 0.15rem; }
+    .quarantine-flags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem; }
+    .flag-tag {
+      background: rgba(255,82,82,0.1);
+      color: #ff5252;
+      border: 1px solid rgba(255,82,82,0.25);
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+    }
+    .quarantine-raw {
+      font-size: 0.78rem;
+      color: var(--muted);
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem;
+      margin-top: 0.75rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 120px;
+      overflow-y: auto;
+      display: none;
+    }
+    .quarantine-raw.open { display: block; }
+
+    .badge-warning { background: rgba(255,82,82,0.12); color: #ff5252; }
+
+    .inbox-status {
+      padding: 0.6rem 1.5rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg3);
+    }
   </style>
 </head>
 <body>
@@ -299,6 +417,8 @@
       <a onclick="showPage('jobs')"><span class="nav-icon">🔨</span> Jobs</a>
       <a onclick="showPage('enquiries')"><span class="nav-icon">✉</span> Enquiries</a>
       <a onclick="showPage('clients')"><span class="nav-icon">👤</span> Clients</a>
+      <a onclick="showPage('inbox')" id="nav-inbox"><span class="nav-icon">📬</span> Inbox <span id="inbox-badge" style="display:none;background:#ff5252;color:#fff;font-size:0.65rem;font-weight:700;padding:0.1rem 0.45rem;border-radius:10px;margin-left:auto"></span></a>
+      <a onclick="showPage('quarantine')" id="nav-quarantine"><span class="nav-icon">🚨</span> Quarantine <span id="quarantine-badge" style="display:none;background:#ff5252;color:#fff;font-size:0.65rem;font-weight:700;padding:0.1rem 0.45rem;border-radius:10px;margin-left:auto"></span></a>
     </nav>
     <div class="version">Buildhaus Dashboard v1.0</div>
   </aside>
@@ -401,6 +521,39 @@
           <button class="btn btn-green" onclick="openModal('client')">+ Add Client</button>
         </div>
         <div id="clients-table"></div>
+      </div>
+    </div>
+
+    <!-- INBOX -->
+    <div class="page" id="page-inbox">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+        <div><h1>Inbox</h1><p>Emails scanned and cleared by the security filter.</p></div>
+        <button class="btn btn-outline" onclick="loadInbox()">Refresh</button>
+      </div>
+      <div id="inbox-loading" style="display:none;padding:2rem;text-align:center;color:var(--muted);font-size:0.875rem;">Loading emails...</div>
+      <div id="inbox-error" style="display:none;padding:1rem 1.5rem;color:#ff5252;font-size:0.875rem;background:var(--bg2);border:1px solid var(--border);border-radius:12px;margin-bottom:1rem;"></div>
+      <div class="email-layout" id="inbox-content" style="display:none;">
+        <div class="box" style="overflow:hidden;">
+          <div class="inbox-status" id="inbox-status"></div>
+          <div id="inbox-list"></div>
+        </div>
+        <div class="email-detail" id="email-detail">
+          <div class="empty"><div class="icon">📬</div>Select an email to read it</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUARANTINE -->
+    <div class="page" id="page-quarantine">
+      <div class="page-header">
+        <h1>Quarantine</h1>
+        <p>Emails flagged by the security scanner. These have NOT been passed to Jarvis.</p>
+      </div>
+      <div class="box" id="quarantine-box">
+        <div class="box-header" style="background:rgba(255,82,82,0.06);">
+          <h2 style="color:#ff5252;">Flagged Emails</h2>
+        </div>
+        <div id="quarantine-list"><div class="empty"><div class="icon">🛡</div>No flagged emails</div></div>
       </div>
     </div>
 
@@ -570,6 +723,9 @@
   let clients = JSON.parse(localStorage.getItem('bh_clients') || '[]');
   let jobFilter = 'all';
   let enquiryFilter = 'all';
+  let inboxEmails = [];
+  let quarantineEmails = [];
+  let selectedEmail = null;
 
   function save() {
     localStorage.setItem('bh_jobs', JSON.stringify(jobs));
@@ -589,6 +745,8 @@
     if (name === 'jobs') renderJobs();
     if (name === 'enquiries') renderEnquiries();
     if (name === 'clients') renderClients();
+    if (name === 'inbox' && !inboxEmails.length) loadInbox();
+    if (name === 'quarantine' && !quarantineEmails.length) loadInbox();
   }
 
   // ---- MODALS ----
@@ -844,6 +1002,208 @@
 
   // ---- INIT ----
   renderOverview();
+
+  // ---- EMAIL ----
+  async function loadInbox() {
+    document.getElementById('inbox-loading').style.display = 'block';
+    document.getElementById('inbox-content').style.display = 'none';
+    document.getElementById('inbox-error').style.display = 'none';
+
+    try {
+      const result = await window.pywebview.api.get_inbox();
+      document.getElementById('inbox-loading').style.display = 'none';
+
+      if (!result.ok) {
+        const err = document.getElementById('inbox-error');
+        err.textContent = 'Error loading emails: ' + result.error;
+        err.style.display = 'block';
+        return;
+      }
+
+      inboxEmails = result.inbox || [];
+      quarantineEmails = result.quarantine || [];
+
+      const ib = document.getElementById('inbox-badge');
+      const unread = inboxEmails.filter(e => e.unread).length;
+      if (unread > 0) { ib.textContent = unread; ib.style.display = 'inline'; }
+      else { ib.style.display = 'none'; }
+
+      const qb = document.getElementById('quarantine-badge');
+      if (quarantineEmails.length > 0) { qb.textContent = quarantineEmails.length; qb.style.display = 'inline'; }
+      else { qb.style.display = 'none'; }
+
+      document.getElementById('inbox-status').textContent =
+        `${inboxEmails.length} email${inboxEmails.length !== 1 ? 's' : ''} — ${quarantineEmails.length} quarantined`;
+
+      renderInboxList();
+      renderQuarantineList();
+
+      document.getElementById('inbox-content').style.display = 'grid';
+    } catch (e) {
+      document.getElementById('inbox-loading').style.display = 'none';
+      const err = document.getElementById('inbox-error');
+      err.textContent = 'Could not connect to email backend. Make sure gmail_token.json exists.';
+      err.style.display = 'block';
+    }
+  }
+
+  function renderInboxList() {
+    const el = document.getElementById('inbox-list');
+    if (!inboxEmails.length) {
+      el.innerHTML = '<div class="empty"><div class="icon">📬</div>No emails in inbox</div>';
+      return;
+    }
+    el.innerHTML = inboxEmails.map((e, i) => `
+      <div class="email-list-item ${e.unread ? 'email-unread' : ''}" onclick="selectEmail(${i})">
+        <div class="email-from">${escHtml(senderName(e.from))}</div>
+        <div class="email-subject">${escHtml(e.subject)}</div>
+        <div class="email-meta">${escHtml(shortDate(e.date))}</div>
+      </div>`).join('');
+  }
+
+  function selectEmail(i) {
+    selectedEmail = inboxEmails[i];
+    document.querySelectorAll('.email-list-item').forEach((el, idx) => {
+      el.classList.toggle('selected', idx === i);
+    });
+    renderEmailDetail(selectedEmail);
+    if (selectedEmail.unread) {
+      window.pywebview.api.mark_read(selectedEmail.id);
+      selectedEmail.unread = false;
+      inboxEmails[i].unread = false;
+      renderInboxList();
+      document.querySelectorAll('.email-list-item')[i].classList.add('selected');
+    }
+  }
+
+  function renderEmailDetail(email) {
+    const el = document.getElementById('email-detail');
+    el.innerHTML = `
+      <div class="email-detail-header">
+        <div class="email-detail-subject">${escHtml(email.subject)}</div>
+        <div class="email-detail-from">${escHtml(email.from)}</div>
+        <div class="email-meta" style="margin-top:0.3rem">${escHtml(email.date)}</div>
+      </div>
+      <div class="email-body" id="detail-body">${escHtml(email.body || email.snippet || '(No body)')}</div>
+      <div class="reply-area">
+        <div style="font-size:0.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Reply</div>
+        <textarea id="reply-text" placeholder="Type your reply or click Generate Draft..."></textarea>
+        <div class="reply-actions">
+          <button class="btn btn-outline" onclick="generateDraft()" id="draft-btn">Generate Draft</button>
+          <button class="btn btn-green" onclick="sendReply()" id="send-btn">Send Reply</button>
+        </div>
+        <div id="reply-status" style="font-size:0.78rem;color:var(--muted);"></div>
+      </div>`;
+  }
+
+  async function generateDraft() {
+    if (!selectedEmail) return;
+    const btn = document.getElementById('draft-btn');
+    const status = document.getElementById('reply-status');
+    btn.textContent = 'Generating...';
+    btn.disabled = true;
+    status.textContent = '';
+    try {
+      const result = await window.pywebview.api.generate_draft(JSON.stringify(selectedEmail));
+      if (result.ok) {
+        document.getElementById('reply-text').value = result.draft;
+        status.textContent = 'Draft ready — review before sending.';
+        status.style.color = 'var(--green)';
+      } else {
+        status.textContent = 'Error: ' + result.error;
+        status.style.color = '#ff5252';
+      }
+    } catch (e) {
+      status.textContent = 'Failed to generate draft.';
+      status.style.color = '#ff5252';
+    }
+    btn.textContent = 'Generate Draft';
+    btn.disabled = false;
+  }
+
+  async function sendReply() {
+    if (!selectedEmail) return;
+    const body = document.getElementById('reply-text').value.trim();
+    if (!body) { alert('Write or generate a reply first.'); return; }
+    if (!confirm('Send this reply to ' + selectedEmail.from + '?')) return;
+
+    const btn = document.getElementById('send-btn');
+    const status = document.getElementById('reply-status');
+    btn.textContent = 'Sending...';
+    btn.disabled = true;
+
+    try {
+      const result = await window.pywebview.api.send_reply(
+        selectedEmail.from,
+        selectedEmail.subject,
+        body,
+        selectedEmail.thread_id,
+        selectedEmail.message_id || ''
+      );
+      if (result.ok) {
+        status.textContent = 'Sent.';
+        status.style.color = 'var(--green)';
+        btn.textContent = 'Sent';
+      } else {
+        status.textContent = 'Error: ' + result.error;
+        status.style.color = '#ff5252';
+        btn.textContent = 'Send Reply';
+        btn.disabled = false;
+      }
+    } catch (e) {
+      status.textContent = 'Send failed.';
+      status.style.color = '#ff5252';
+      btn.textContent = 'Send Reply';
+      btn.disabled = false;
+    }
+  }
+
+  function renderQuarantineList() {
+    const el = document.getElementById('quarantine-list');
+    if (!quarantineEmails.length) {
+      el.innerHTML = '<div class="empty"><div class="icon">🛡</div>No flagged emails</div>';
+      return;
+    }
+    el.innerHTML = quarantineEmails.map((e, i) => `
+      <div class="quarantine-item">
+        <div class="quarantine-from">${escHtml(senderName(e.from))}</div>
+        <div class="quarantine-subject">${escHtml(e.subject)}</div>
+        <div class="quarantine-flags">
+          ${e.flags.map(f => `<span class="flag-tag">${escHtml(f)}</span>`).join('')}
+        </div>
+        <div style="margin-top:0.5rem">
+          <button class="btn btn-danger" style="font-size:0.72rem" onclick="toggleRaw('qraw-${i}')">View Raw</button>
+        </div>
+        <div class="quarantine-raw" id="qraw-${i}">${escHtml(e.body || e.snippet || '(No body)')}</div>
+      </div>`).join('');
+  }
+
+  function toggleRaw(id) {
+    document.getElementById(id).classList.toggle('open');
+  }
+
+  // ---- HELPERS ----
+  function escHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function senderName(from) {
+    const match = from && from.match(/^([^<]+)</);
+    return match ? match[1].trim() : (from || '');
+  }
+
+  function shortDate(dateStr) {
+    if (!dateStr) return '';
+    try {
+      return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    } catch { return dateStr; }
+  }
+
 </script>
 </body>
 </html>

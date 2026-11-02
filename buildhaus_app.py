@@ -48,6 +48,21 @@ class Api:
         except Exception as e:
             return {'ok': False, 'error': str(e)}
 
+    def send_invoice_email(self, to, subject, html):
+        try:
+            from gmail_client import send_email
+            send_email(to, subject, html)
+            return {'ok': True}
+        except Exception as e:
+            return {'ok': False, 'error': str(e)}
+
+    def open_invoice_print(self, html):
+        import tempfile, webbrowser
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
+            f.write(html)
+        webbrowser.open('file:///' + f.name.replace('\\', '/'))
+        return {'ok': True}
+
 html_path = os.path.join(BASE, 'dashboard.html')
 api = Api()
 

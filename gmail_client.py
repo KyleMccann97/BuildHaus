@@ -35,10 +35,13 @@ def fetch_emails(max_results=20):
         ).execute()
         headers = {h['name']: h['value'] for h in full['payload'].get('headers', [])}
         body = _extract_body(full['payload'])
+        sender = headers.get('From', '')
+        reply_to = headers.get('Reply-To', '') or _extract_formspree_email(body) or sender
         emails.append({
             'id': full['id'],
             'thread_id': full['threadId'],
-            'from': headers.get('From', ''),
+            'from': sender,
+            'reply_to': reply_to,
             'to': headers.get('To', ''),
             'subject': headers.get('Subject', '(No Subject)'),
             'date': headers.get('Date', ''),
@@ -48,6 +51,13 @@ def fetch_emails(max_results=20):
             'unread': 'UNREAD' in full.get('labelIds', []),
         })
     return emails
+
+def _extract_formspree_email(body):
+    import re
+    if not body:
+        return ''
+    match = re.search(r'[Ee]mail[:\s]+([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})', body)
+    return match.group(1) if match else ''
 
 def _extract_body(payload):
     if 'parts' in payload:
@@ -65,6 +75,17 @@ def _extract_body(payload):
         if data:
             return base64.urlsafe_b64decode(data).decode('utf-8', errors='replace')
     return ''
+
+def send_email(to: str, subject: str, html_body: str):
+    from email.mime.multipart import MIMEMultipart
+    service = get_service()
+    msg = MIMEMultipart('alternative')
+    msg['To'] = to
+    msg['From'] = 'me'
+    msg['Subject'] = subject
+    msg.attach(MIMEText(html_body, 'html', 'utf-8'))
+    raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
+    return service.users().messages().send(userId='me', body={'raw': raw}).execute()
 
 def send_reply(to: str, subject: str, body: str, thread_id: str, in_reply_to: str = None):
     service = get_service()

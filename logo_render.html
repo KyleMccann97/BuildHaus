@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  * { margin: 0; padding: 0; }
+  body { width: 800px; height: 800px; background: #0d0d0d; display: flex; align-items: center; justify-content: center; }
+  svg { width: 800px; height: 800px; }
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100">
+  <defs>
+    <clipPath id="top-half">
+      <rect x="0" y="0" width="120" height="50"/>
+    </clipPath>
+    <clipPath id="bot-half">
+      <rect x="0" y="50" width="120" height="50"/>
+    </clipPath>
+  </defs>
+  <rect width="120" height="100" rx="14" fill="#0d0d0d"/>
+  <text x="7" y="79" font-family="Arial Black, sans-serif" font-weight="900" font-size="74" fill="#ffffff">B</text>
+  <text x="47" y="79" font-family="Arial Black, sans-serif" font-weight="900" font-size="74" fill="#00e676">H</text>
+  <text x="7" y="79" font-family="Arial Black, sans-serif" font-weight="900" font-size="74" fill="#ffffff" clip-path="url(#top-half)">B</text>
+  <text x="47" y="79" font-family="Arial Black, sans-serif" font-weight="900" font-size="74" fill="#00e676" clip-path="url(#bot-half)">H</text>
+</svg>
+</body>
+</html>

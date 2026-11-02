@@ -2,3 +2,6 @@ credentials.json
 gmail_token.json
 __pycache__/
 *.pyc
+
+# Private: prospect list with third-party contact details — never publish
+outreach.html

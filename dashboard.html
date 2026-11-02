@@ -396,6 +396,18 @@
 
     .badge-warning { background: rgba(255,82,82,0.12); color: #ff5252; }
 
+    /* LOG REPLY BUTTON */
+    .btn-log-reply { display: block; width: 100%; margin-top: 1rem; padding: 0.6rem 0.75rem; background: rgba(0,230,118,0.07); border: 1px solid rgba(0,230,118,0.25); color: var(--green); border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; text-align: center; }
+    .btn-log-reply:hover { background: rgba(0,230,118,0.15); }
+
+    /* LINE ITEMS */
+    .line-item-row { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem; }
+    .line-item-row .line-desc { flex: 1; background: var(--bg3); border: 1px solid var(--border); color: var(--text); padding: 0.65rem 0.9rem; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 0.875rem; outline: none; transition: border-color 0.2s; }
+    .line-item-row .line-desc:focus { border-color: var(--green); }
+    .line-item-row .line-amount { width: 120px; background: var(--bg3); border: 1px solid var(--border); color: var(--text); padding: 0.65rem 0.9rem; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 0.875rem; outline: none; transition: border-color 0.2s; }
+    .line-item-row .line-amount:focus { border-color: var(--green); }
+    .inv-total { border-top: 1px solid var(--border); margin-top: 0.75rem; padding-top: 0.75rem; text-align: right; font-size: 1.2rem; font-weight: 900; color: var(--green); }
+
     .inbox-status {
       padding: 0.6rem 1.5rem;
       font-size: 0.78rem;
@@ -417,9 +429,12 @@
       <a onclick="showPage('jobs')"><span class="nav-icon">🔨</span> Jobs</a>
       <a onclick="showPage('enquiries')"><span class="nav-icon">✉</span> Enquiries</a>
       <a onclick="showPage('clients')"><span class="nav-icon">👤</span> Clients</a>
+      <a onclick="showPage('invoices')"><span class="nav-icon">🧾</span> Invoices</a>
+      <a onclick="showPage('outreach')" id="nav-outreach"><span class="nav-icon">📣</span> Outreach</a>
       <a onclick="showPage('inbox')" id="nav-inbox"><span class="nav-icon">📬</span> Inbox <span id="inbox-badge" style="display:none;background:#ff5252;color:#fff;font-size:0.65rem;font-weight:700;padding:0.1rem 0.45rem;border-radius:10px;margin-left:auto"></span></a>
       <a onclick="showPage('quarantine')" id="nav-quarantine"><span class="nav-icon">🚨</span> Quarantine <span id="quarantine-badge" style="display:none;background:#ff5252;color:#fff;font-size:0.65rem;font-weight:700;padding:0.1rem 0.45rem;border-radius:10px;margin-left:auto"></span></a>
     </nav>
+    <button class="btn-log-reply" onclick="openLogReply()">+ Log FB Reply</button>
     <div class="version">Buildhaus Dashboard v1.0</div>
   </aside>
 
@@ -522,6 +537,32 @@
         </div>
         <div id="clients-table"></div>
       </div>
+    </div>
+
+    <!-- INVOICES -->
+    <div class="page" id="page-invoices">
+      <div class="page-header">
+        <h1>Invoices</h1>
+        <p>Create and send invoices. Print as PDF directly from the browser.</p>
+      </div>
+      <div class="box">
+        <div class="box-header">
+          <h2>All Invoices</h2>
+          <button class="btn btn-green" onclick="openModal('invoice')">+ New Invoice</button>
+        </div>
+        <div class="filter-row" id="invoice-filter-row">
+          <button class="filter-btn active" onclick="filterInvoices('all', this)">All</button>
+          <button class="filter-btn" onclick="filterInvoices('Draft', this)">Draft</button>
+          <button class="filter-btn" onclick="filterInvoices('Sent', this)">Sent</button>
+          <button class="filter-btn" onclick="filterInvoices('Paid', this)">Paid</button>
+        </div>
+        <div id="invoices-table"></div>
+      </div>
+    </div>
+
+    <!-- OUTREACH -->
+    <div class="page" id="page-outreach" style="margin: -2.5rem; height: 100vh;">
+      <iframe src="outreach.html" style="width:100%;height:100%;border:none;display:block;"></iframe>
     </div>
 
     <!-- INBOX -->
@@ -716,13 +757,113 @@
   </div>
 </div>
 
+<!-- INVOICE MODAL -->
+<div class="modal-overlay" id="modal-invoice">
+  <div class="modal" style="max-width:560px">
+    <h3 id="inv-modal-title">New Invoice</h3>
+    <input type="hidden" id="inv-id" />
+    <div class="form-row">
+      <div class="form-group">
+        <label>Invoice #</label>
+        <input type="text" id="inv-number" placeholder="BH-001" />
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="inv-status">
+          <option>Draft</option>
+          <option>Sent</option>
+          <option>Paid</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Client Name</label>
+        <input type="text" id="inv-client" placeholder="Full name or business" />
+      </div>
+      <div class="form-group">
+        <label>Client Email</label>
+        <input type="email" id="inv-email" placeholder="their@email.com" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Invoice Date</label>
+        <input type="date" id="inv-date" />
+      </div>
+      <div class="form-group">
+        <label>Due Date</label>
+        <input type="date" id="inv-due" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Link to Job (optional)</label>
+      <select id="inv-job"><option value="">— None —</option></select>
+    </div>
+    <div class="form-group">
+      <label>Line Items</label>
+      <div id="invoice-items"></div>
+      <button class="btn btn-outline btn-sm" style="margin-top:0.5rem" onclick="addInvoiceItem()">+ Add Item</button>
+      <div class="inv-total">Total: <span id="inv-total-display">£0.00</span></div>
+    </div>
+    <div class="form-group">
+      <label>Notes</label>
+      <textarea id="inv-notes" placeholder="Payment instructions, bank details, anything else..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('invoice')">Cancel</button>
+      <button class="btn btn-green" onclick="saveInvoice()">Save Invoice</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOG FB REPLY MODAL -->
+<div class="modal-overlay" id="modal-logreply">
+  <div class="modal">
+    <h3>Log Facebook Reply</h3>
+    <p style="font-size:0.8rem;color:var(--muted);margin-bottom:1.25rem">Someone replied to your outreach. Fill this in and it gets added to Enquiries automatically.</p>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Their Name</label>
+        <input type="text" id="lr-name" placeholder="e.g. John Smith" />
+      </div>
+      <div class="form-group">
+        <label>Business Name</label>
+        <input type="text" id="lr-company" placeholder="Optional" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Category</label>
+      <select id="lr-trade">
+        <option value="">Unknown</option>
+        <option>Plumber</option>
+        <option>Electrician</option>
+        <option>Builder</option>
+        <option>Hair/Beauty</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Their Message</label>
+      <textarea id="lr-message" placeholder="Paste what they said..." style="min-height:110px"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('logreply')">Cancel</button>
+      <button class="btn btn-green" onclick="saveLogReply()">Log as Enquiry</button>
+    </div>
+  </div>
+</div>
+
 <script>
   // ---- DATA ----
   let jobs = JSON.parse(localStorage.getItem('bh_jobs') || '[]');
   let enquiries = JSON.parse(localStorage.getItem('bh_enquiries') || '[]');
   let clients = JSON.parse(localStorage.getItem('bh_clients') || '[]');
+  let invoices = JSON.parse(localStorage.getItem('bh_invoices') || '[]');
   let jobFilter = 'all';
   let enquiryFilter = 'all';
+  let invoiceFilter = 'all';
+  let invoiceItems = [{ desc: '', amount: 0 }];
   let inboxEmails = [];
   let quarantineEmails = [];
   let selectedEmail = null;
@@ -745,6 +886,7 @@
     if (name === 'jobs') renderJobs();
     if (name === 'enquiries') renderEnquiries();
     if (name === 'clients') renderClients();
+    if (name === 'invoices') renderInvoices();
     if (name === 'inbox' && !inboxEmails.length) loadInbox();
     if (name === 'quarantine' && !quarantineEmails.length) loadInbox();
   }
@@ -813,6 +955,23 @@
         document.getElementById('client-phone').value = '';
         document.getElementById('client-notes').value = '';
       }
+    }
+    if (type === 'invoice') {
+      const ex = id ? invoices.find(x => x.id === id) : null;
+      document.getElementById('inv-modal-title').textContent = id ? 'Edit Invoice' : 'New Invoice';
+      document.getElementById('inv-id').value = id || '';
+      document.getElementById('inv-number').value = ex ? ex.number : nextInvoiceNumber();
+      document.getElementById('inv-client').value = ex ? ex.client : '';
+      document.getElementById('inv-email').value = ex ? ex.email : '';
+      document.getElementById('inv-date').value = ex ? ex.date : new Date().toISOString().split('T')[0];
+      const due = new Date(); due.setDate(due.getDate() + 14);
+      document.getElementById('inv-due').value = ex ? ex.due : due.toISOString().split('T')[0];
+      document.getElementById('inv-notes').value = ex ? ex.notes : 'Payment by bank transfer:\nAccount number: 69321128\nSort code: 04-00-04\n\nPlease use your invoice number as the payment reference.';
+      document.getElementById('inv-status').value = ex ? ex.status : 'Draft';
+      const jobSel = document.getElementById('inv-job');
+      jobSel.innerHTML = '<option value="">— None —</option>' + jobs.map(j => `<option value="${j.id}"${ex && ex.jobId === j.id ? ' selected' : ''}>${j.client} — ${j.name}</option>`).join('');
+      invoiceItems = ex ? ex.items.map(i => ({ ...i })) : [{ desc: '', amount: 0 }];
+      renderInvoiceItems();
     }
     document.getElementById('modal-' + type).classList.add('open');
   }
@@ -1081,7 +1240,8 @@
     el.innerHTML = `
       <div class="email-detail-header">
         <div class="email-detail-subject">${escHtml(email.subject)}</div>
-        <div class="email-detail-from">${escHtml(email.from)}</div>
+        <div class="email-detail-from">From: ${escHtml(email.from)}</div>
+        ${email.reply_to && email.reply_to !== email.from ? `<div class="email-detail-from" style="color:var(--green)">Reply to: ${escHtml(email.reply_to)}</div>` : ''}
         <div class="email-meta" style="margin-top:0.3rem">${escHtml(email.date)}</div>
       </div>
       <div class="email-body" id="detail-body">${escHtml(email.body || email.snippet || '(No body)')}</div>
@@ -1134,7 +1294,7 @@
 
     try {
       const result = await window.pywebview.api.send_reply(
-        selectedEmail.from,
+        selectedEmail.reply_to || selectedEmail.from,
         selectedEmail.subject,
         body,
         selectedEmail.thread_id,
@@ -1195,6 +1355,204 @@
   function senderName(from) {
     const match = from && from.match(/^([^<]+)</);
     return match ? match[1].trim() : (from || '');
+  }
+
+  // ---- INVOICES ----
+  function nextInvoiceNumber() {
+    const nums = invoices.map(i => parseInt((i.number || '').replace('BH-', '')) || 0);
+    return 'BH-' + String((nums.length ? Math.max(...nums) : 0) + 1).padStart(3, '0');
+  }
+
+  function addInvoiceItem() {
+    invoiceItems.push({ desc: '', amount: 0 });
+    renderInvoiceItems();
+  }
+
+  function removeInvoiceItem(i) {
+    if (invoiceItems.length <= 1) return;
+    invoiceItems.splice(i, 1);
+    renderInvoiceItems();
+  }
+
+  function renderInvoiceItems() {
+    const el = document.getElementById('invoice-items');
+    if (!el) return;
+    el.innerHTML = invoiceItems.map((item, i) => `
+      <div class="line-item-row">
+        <input type="text" class="line-desc" placeholder="e.g. Starter website package" value="${escHtml(item.desc || '')}" oninput="invoiceItems[${i}].desc = this.value" />
+        <input type="number" class="line-amount" placeholder="0.00" step="0.01" value="${item.amount || ''}" oninput="invoiceItems[${i}].amount = parseFloat(this.value)||0; updateInvoiceTotal()" />
+        <button class="btn btn-danger" style="padding:0.3rem 0.65rem;font-size:1rem;line-height:1" onclick="removeInvoiceItem(${i})">×</button>
+      </div>`).join('');
+    updateInvoiceTotal();
+  }
+
+  function updateInvoiceTotal() {
+    const total = invoiceItems.reduce((s, i) => s + (i.amount || 0), 0);
+    const el = document.getElementById('inv-total-display');
+    if (el) el.textContent = '£' + total.toFixed(2);
+  }
+
+  function saveInvoice() {
+    const id = document.getElementById('inv-id').value;
+    const inv = {
+      id: id || uid(),
+      number: document.getElementById('inv-number').value,
+      client: document.getElementById('inv-client').value,
+      email: document.getElementById('inv-email').value,
+      date: document.getElementById('inv-date').value,
+      due: document.getElementById('inv-due').value,
+      items: invoiceItems.map(i => ({ desc: i.desc, amount: i.amount })),
+      notes: document.getElementById('inv-notes').value,
+      status: document.getElementById('inv-status').value,
+      jobId: document.getElementById('inv-job').value,
+      created: id ? invoices.find(x => x.id === id).created : new Date().toISOString()
+    };
+    if (id) { invoices = invoices.map(x => x.id === id ? inv : x); }
+    else { invoices.unshift(inv); }
+    localStorage.setItem('bh_invoices', JSON.stringify(invoices));
+    closeModal('invoice');
+    renderInvoices();
+  }
+
+  function deleteInvoice(id) {
+    if (confirm('Delete this invoice?')) {
+      invoices = invoices.filter(x => x.id !== id);
+      localStorage.setItem('bh_invoices', JSON.stringify(invoices));
+      renderInvoices();
+    }
+  }
+
+  function markInvoicePaid(id) {
+    invoices = invoices.map(x => x.id === id ? { ...x, status: 'Paid' } : x);
+    localStorage.setItem('bh_invoices', JSON.stringify(invoices));
+    renderInvoices();
+  }
+
+  function filterInvoices(f, btn) {
+    invoiceFilter = f;
+    document.querySelectorAll('#invoice-filter-row .filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderInvoices();
+  }
+
+  function invBadge(s) {
+    const map = { 'Draft': 'badge-progress', 'Sent': 'badge-enquiry', 'Paid': 'badge-paid' };
+    return `<span class="badge ${map[s] || ''}">${s}</span>`;
+  }
+
+  function renderInvoices() {
+    const filtered = invoiceFilter === 'all' ? invoices : invoices.filter(i => i.status === invoiceFilter);
+    const el = document.getElementById('invoices-table');
+    if (!el) return;
+    if (!filtered.length) { el.innerHTML = '<div class="empty"><div class="icon">🧾</div>No invoices yet</div>'; return; }
+    el.innerHTML = `<table>
+      <thead><tr><th>#</th><th>Client</th><th>Total</th><th>Date</th><th>Due</th><th>Status</th><th></th></tr></thead>
+      <tbody>${filtered.map(inv => {
+        const total = (inv.items || []).reduce((s, i) => s + (i.amount || 0), 0);
+        return `<tr>
+          <td style="font-weight:700;color:var(--green)">${inv.number}</td>
+          <td><div class="client-name">${inv.client}</div><div class="client-email">${inv.email || ''}</div></td>
+          <td style="font-weight:700">£${total.toFixed(2)}</td>
+          <td style="color:var(--muted);font-size:0.8rem">${inv.date ? new Date(inv.date).toLocaleDateString('en-GB') : '—'}</td>
+          <td style="color:var(--muted);font-size:0.8rem">${inv.due ? new Date(inv.due).toLocaleDateString('en-GB') : '—'}</td>
+          <td>${invBadge(inv.status)}</td>
+          <td><div class="action-row">
+            ${inv.email ? `<button class="btn btn-green btn-sm" onclick="sendInvoiceEmail('${inv.id}')">Send</button>` : ''}
+            <button class="btn btn-outline btn-sm" onclick="printInvoice('${inv.id}')">Print / PDF</button>
+            <button class="btn btn-outline btn-sm" onclick="openModal('invoice','${inv.id}')">Edit</button>
+            ${inv.status !== 'Paid' ? `<button class="btn btn-outline btn-sm" style="color:var(--green);border-color:rgba(0,230,118,0.3)" onclick="markInvoicePaid('${inv.id}')">Mark Paid</button>` : ''}
+            <button class="btn btn-danger" onclick="deleteInvoice('${inv.id}')">Delete</button>
+          </div></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+  }
+
+  async function printInvoice(id) {
+    const inv = invoices.find(i => i.id === id);
+    if (!inv) return;
+    const total = (inv.items || []).reduce((s, i) => s + (i.amount || 0), 0);
+    const fmtDate = d => d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '—';
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${inv.number}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#111;padding:60px;max-width:820px;margin:0 auto}.hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:40px}.brand{font-size:30px;font-weight:900;letter-spacing:-1px}.brand span{color:#00c853}.inv-meta{text-align:right}.inv-number{font-size:22px;font-weight:700;margin-bottom:6px}.inv-meta p{font-size:13px;color:#666;margin-top:4px}hr{border:none;border-top:2px solid #00c853;margin-bottom:36px}.addrs{display:flex;justify-content:space-between;margin-bottom:40px}.ab h4{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#999;margin-bottom:8px}.ab p{font-size:14px;line-height:1.7}table{width:100%;border-collapse:collapse;margin-bottom:24px}th{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#999;text-align:left;padding:10px 0;border-bottom:1px solid #e0e0e0}th.r{text-align:right}td{padding:14px 0;border-bottom:1px solid #f0f0f0;font-size:14px}td.r{text-align:right;font-weight:600}.tot{display:flex;justify-content:flex-end;margin-top:8px}.tot-box{text-align:right}.tot-label{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}.tot-amount{font-size:36px;font-weight:900;letter-spacing:-1px;color:#00c853}.notes{margin-top:36px;padding-top:20px;border-top:1px solid #e0e0e0;font-size:13px;color:#555;line-height:1.7}.footer{margin-top:60px;padding-top:20px;border-top:1px solid #f0f0f0;font-size:12px;color:#bbb;text-align:center}@media print{body{padding:30px}}</style></head><body>
+<div class="hdr"><div class="brand">Build<span>haus</span></div><div class="inv-meta"><div class="inv-number">${inv.number}</div><p>Date: ${fmtDate(inv.date)}</p><p>Due: ${fmtDate(inv.due)}</p><p style="margin-top:8px;font-weight:600;color:${inv.status==='Paid'?'#00c853':inv.status==='Sent'?'#4fc3f7':'#aaa'}">${inv.status}</p></div></div>
+<hr>
+<div class="addrs"><div class="ab"><h4>From</h4><p><strong>Buildhaus</strong><br>Falkirk, Scotland<br>buildhausdesign@gmail.com<br>buildhausdesign.co.uk</p></div><div class="ab" style="text-align:right"><h4>Bill To</h4><p><strong>${escHtml(inv.client)}</strong>${inv.email ? '<br>' + escHtml(inv.email) : ''}</p></div></div>
+<table><thead><tr><th>Description</th><th class="r">Amount</th></tr></thead><tbody>${(inv.items || []).map(item => `<tr><td>${escHtml(item.desc || '')}</td><td class="r">£${(item.amount || 0).toFixed(2)}</td></tr>`).join('')}</tbody></table>
+<div class="tot"><div class="tot-box"><div class="tot-label">Total Due</div><div class="tot-amount">£${total.toFixed(2)}</div></div></div>
+${inv.notes ? `<div class="notes"><strong>Notes:</strong><br>${escHtml(inv.notes)}</div>` : ''}
+<div class="footer">Thank you for your business &nbsp;·&nbsp; Buildhaus &nbsp;·&nbsp; buildhausdesign.co.uk</div>
+</body></html>`;
+    try {
+      await window.pywebview.api.open_invoice_print(html);
+    } catch(e) {
+      const w = window.open('', '_blank', 'width=900,height=750');
+      w.document.write(html);
+      w.document.close();
+    }
+  }
+
+  async function sendInvoiceEmail(id) {
+    const inv = invoices.find(i => i.id === id);
+    if (!inv || !inv.email) { alert('No client email on this invoice.'); return; }
+    if (!confirm(`Send invoice ${inv.number} to ${inv.email}?`)) return;
+
+    const total = (inv.items || []).reduce((s, i) => s + (i.amount || 0), 0);
+    const fmtDate = d => d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '—';
+    const subject = `Invoice ${inv.number} from Buildhaus`;
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#111;background:#f5f5f5;padding:40px 20px}.wrap{background:#fff;max-width:680px;margin:0 auto;border-radius:8px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08)}.top{background:#0d0d0d;padding:28px 36px;display:flex;justify-content:space-between;align-items:center}.brand{font-size:24px;font-weight:900;letter-spacing:-1px;color:#fff}.brand span{color:#00e676}.inv-ref{text-align:right;color:#aaa;font-size:13px}.inv-ref strong{display:block;font-size:18px;color:#fff;margin-bottom:4px}.body{padding:36px}.addrs{display:flex;justify-content:space-between;margin-bottom:32px}.ab h4{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#999;margin-bottom:6px}.ab p{font-size:14px;line-height:1.7;color:#333}table{width:100%;border-collapse:collapse;margin-bottom:20px}th{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#999;text-align:left;padding:8px 0;border-bottom:2px solid #f0f0f0}th.r{text-align:right}td{padding:12px 0;border-bottom:1px solid #f5f5f5;font-size:14px;color:#333}td.r{text-align:right;font-weight:600}.tot{display:flex;justify-content:flex-end;margin:8px 0 32px}.tot-box{text-align:right}.tot-label{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}.tot-amount{font-size:32px;font-weight:900;letter-spacing:-1px;color:#00c853}.notes{background:#f9f9f9;border-radius:6px;padding:16px;font-size:13px;color:#555;line-height:1.7;margin-bottom:24px}.footer{background:#f9f9f9;padding:20px 36px;text-align:center;font-size:12px;color:#aaa;border-top:1px solid #eee}</style></head><body>
+<div class="wrap">
+<div class="top"><div class="brand">Build<span>haus</span></div><div class="inv-ref"><strong>${inv.number}</strong><span>Date: ${fmtDate(inv.date)}</span><br><span>Due: ${fmtDate(inv.due)}</span></div></div>
+<div class="body">
+<div class="addrs"><div class="ab"><h4>From</h4><p><strong>Buildhaus</strong><br>Falkirk, Scotland<br>buildhausdesign@gmail.com<br>buildhausdesign.co.uk</p></div><div class="ab" style="text-align:right"><h4>Bill To</h4><p><strong>${escHtml(inv.client)}</strong>${inv.email ? '<br>' + escHtml(inv.email) : ''}</p></div></div>
+<table><thead><tr><th>Description</th><th class="r">Amount</th></tr></thead><tbody>${(inv.items || []).map(item => `<tr><td>${escHtml(item.desc || '')}</td><td class="r">£${(item.amount || 0).toFixed(2)}</td></tr>`).join('')}</tbody></table>
+<div class="tot"><div class="tot-box"><div class="tot-label">Total Due</div><div class="tot-amount">£${total.toFixed(2)}</div></div></div>
+${inv.notes ? `<div class="notes"><strong>Notes:</strong><br>${escHtml(inv.notes)}</div>` : ''}
+</div>
+<div class="footer">Questions? Reply to this email or visit buildhausdesign.co.uk &nbsp;·&nbsp; Buildhaus, Falkirk, Scotland</div>
+</div></body></html>`;
+
+    try {
+      const result = await window.pywebview.api.send_invoice_email(inv.email, subject, html);
+      if (result.ok) {
+        invoices = invoices.map(x => x.id === id ? { ...x, status: 'Sent' } : x);
+        localStorage.setItem('bh_invoices', JSON.stringify(invoices));
+        renderInvoices();
+        alert(`Invoice sent to ${inv.email}`);
+      } else {
+        alert('Send failed: ' + result.error);
+      }
+    } catch(e) {
+      alert('Could not send — check dashboard is running.');
+    }
+  }
+
+  // ---- LOG FB REPLY ----
+  function openLogReply() {
+    document.getElementById('lr-name').value = '';
+    document.getElementById('lr-company').value = '';
+    document.getElementById('lr-trade').value = '';
+    document.getElementById('lr-message').value = '';
+    document.getElementById('modal-logreply').classList.add('open');
+  }
+
+  function saveLogReply() {
+    const name = document.getElementById('lr-name').value.trim();
+    if (!name) { alert('Enter their name first.'); return; }
+    const enq = {
+      id: uid(),
+      name,
+      email: '',
+      company: document.getElementById('lr-company').value.trim(),
+      service: 'New Website',
+      status: 'New Enquiry',
+      date: new Date().toISOString().split('T')[0],
+      notes: 'Source: Facebook Messenger\n\n' + document.getElementById('lr-message').value.trim(),
+      created: new Date().toISOString()
+    };
+    enquiries.unshift(enq);
+    save();
+    closeModal('logreply');
+    alert(name + ' logged as a new enquiry.');
   }
 
   function shortDate(dateStr) {

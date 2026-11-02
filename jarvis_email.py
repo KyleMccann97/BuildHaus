@@ -19,10 +19,11 @@ About Buildhaus:
 - Email: buildhausdesign@gmail.com
 - Based in Scotland, work with clients worldwide
 
-Tone: professional, warm, and direct. No corporate waffle. Short paragraphs. Sign off as 'Kyle, Buildhaus'."""
+Tone: professional, warm, and direct. No corporate waffle. Short paragraphs. Sign off as 'Kyle, Buildhaus'.
+Formatting: replies are sent as plain-text email, so write plain text only. No markdown — no asterisks, bold, headings, or bullet symbols."""
 
 def generate_reply_draft(email: dict) -> str:
-    config_path = os.path.join(BASE, '..', 'OneDrive_1_05-06-2026', 'config.json')
+    config_path = os.path.join(BASE, '..', 'claude', 'OneDrive_1_05-06-2026', 'config.json')
     config_path = os.path.normpath(config_path)
     with open(config_path) as f:
         api_key = json.load(f)['anthropic_api_key']
